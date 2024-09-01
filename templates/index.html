@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Object Detection with YOLOv8</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #283c86, #45a247);
+            color: white;
+        }
+        h1 {
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+        }
+        p {
+            margin-bottom: 30px;
+            font-size: 1.2em;
+            text-align: center;
+            max-width: 600px;
+        }
+        #video-container {
+            border: 5px solid #61dafb;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.5);
+        }
+        #video-container img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+        footer {
+            margin-top: 20px;
+            font-size: 1em;
+            color: #f1f1f1;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        footer a {
+            color: #61dafb;
+            text-decoration: none;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Live Object Detection</h1>
+    <p>Welcome to the live object detection app powered by YOLOv8. The application detects various objects such as people, vehicles, and animals in real-time. Simply start the camera feed and see the magic happen!</p>
+    <div id="video-container">
+        <img src="{{ url_for('video_feed') }}" alt="Video Feed">
+    </div>
+    <footer>
+        <p>Developed by <a href="https://github.com/tawfia-yeasmin" target="_blank">Tawfia Yeasmin</a></p>
+    </footer>
+</body>
+</html>
