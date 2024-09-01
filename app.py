@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, send_file
+from flask import Flask, render_template, request, redirect, url_for, send_file, jsonify
 import cv2
 from ultralytics import YOLO
 import os
@@ -51,6 +51,7 @@ def upload_image():
             results = model(frame)
 
             # Iterate through results and draw bounding boxes with labels
+            detected_objects = []
             for result in results:
                 boxes = result.boxes  # List of detected boxes
                 for box in boxes:
@@ -77,14 +78,25 @@ def upload_image():
                         cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
                         cv2.putText(frame, f"{label} {confidence:.2f}", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
 
+                        # Append detected object to list
+                        detected_objects.append({
+                            'name': label,
+                            'confidence': float(confidence)
+                        })
+
             # Save the resulting image
             result_filepath = os.path.join(UPLOAD_FOLDER, 'result_' + file.filename)
             cv2.imwrite(result_filepath, frame)
 
-            # Start a thread to delete the file after 10 minutes (600 seconds)
-            threading.Thread(target=delete_file_after_delay, args=(result_filepath, 600)).start()
+            # Start a thread to delete both the original and result images after 2 minutes (120 seconds)
+            threading.Thread(target=delete_file_after_delay, args=(filepath, 120)).start()
+            threading.Thread(target=delete_file_after_delay, args=(result_filepath, 120)).start()
 
-            return redirect(url_for('display_result', image_name='result_' + file.filename))
+            # Return the result to be displayed on the frontend
+            return jsonify({
+                'image_url': url_for('display_result', image_name='result_' + file.filename),
+                'detected_objects': detected_objects
+            })
     except Exception as e:
         print(f"Error processing the image: {e}")
         return "There was an error processing your image.", 500
