@@ -1,6 +1,9 @@
-from flask import Flask, render_template, Response
+from flask import Flask, render_template, request, redirect, url_for, send_file
 import cv2
 from ultralytics import YOLO
+import os
+import threading
+import time
 
 app = Flask(__name__)
 
@@ -10,14 +13,37 @@ model = YOLO("yolov8n.pt")
 # Define the classes we are interested in
 INTERESTING_CLASSES = ['person', 'cell phone', 'dog', 'cat', 'car', 'motorbike', 'bicycle', 'bus', 'truck']
 
-def generate_frames():
-    cap = cv2.VideoCapture(0)  # Use 0 for webcam or replace with video file path
-    while True:
-        success, frame = cap.read()
-        if not success:
-            break
+# Folder to store uploaded images
+UPLOAD_FOLDER = 'uploads/'
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+def delete_file_after_delay(filepath, delay):
+    """Delete a file after a specified delay."""
+    time.sleep(delay)
+    if os.path.exists(filepath):
+        os.remove(filepath)
+        print(f"Deleted file: {filepath}")
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/upload_image', methods=['POST'])
+def upload_image():
+    if 'image' not in request.files:
+        return redirect(url_for('index'))
+    
+    file = request.files['image']
+    if file.filename == '':
+        return redirect(url_for('index'))
+
+    if file:
+        filepath = os.path.join(UPLOAD_FOLDER, file.filename)
+        file.save(filepath)
 
         # Perform object detection
+        frame = cv2.imread(filepath)
         results = model(frame)
 
         # Iterate through results and draw bounding boxes with labels
@@ -47,23 +73,18 @@ def generate_frames():
                     cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
                     cv2.putText(frame, f"{label} {confidence:.2f}", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
 
-        # Encode the frame in JPEG format
-        ret, buffer = cv2.imencode('.jpg', frame)
-        frame = buffer.tobytes()
+        # Save the resulting image
+        result_filepath = os.path.join(UPLOAD_FOLDER, 'result_' + file.filename)
+        cv2.imwrite(result_filepath, frame)
 
-        # Yield the frame as an HTTP response with multipart MIME type
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+        # Start a thread to delete the file after 10 minutes (600 seconds)
+        threading.Thread(target=delete_file_after_delay, args=(result_filepath, 600)).start()
 
-    cap.release()
+        return redirect(url_for('display_result', image_name='result_' + file.filename))
 
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-@app.route('/video_feed')
-def video_feed():
-    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+@app.route('/uploads/<image_name>')
+def display_result(image_name):
+    return send_file(os.path.join(UPLOAD_FOLDER, image_name))
 
 if __name__ == '__main__':
     app.run(debug=True)
