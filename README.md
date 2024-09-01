@@ -1,6 +1,6 @@
 # 🌟 AI Vision Lab: Live Object Detection
 
-![Project Banner](https://your-image-url.com/project-banner.png)
+![Project Banner](/banner_image.jpeg)
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen?style=for-the-badge)](https://yeasmin.pythonanywhere.com/)
 [![GitHub license](https://img.shields.io/github/license/Silicon-Sorceress-Tawfia/AI-Vision-Lab?style=for-the-badge)](https://github.com/Silicon-Sorceress-Tawfia/AI-Vision-Lab/blob/main/LICENSE)
